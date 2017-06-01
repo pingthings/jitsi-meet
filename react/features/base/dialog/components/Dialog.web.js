@@ -128,7 +128,7 @@ class Dialog extends AbstractDialog {
      * @private
      */
     _renderOKButton() {
-        if (this.props.submitDisabled) {
+        if (this.props.okDisabled) {
             return null;
         }
 

@@ -81,7 +81,7 @@ class SpeakerStats extends Component {
         return (
             <Dialog
                 cancelTitleKey = { 'dialog.close' }
-                submitDisabled = { true }
+                okDisabled = { true }
                 titleKey = 'speakerStats.speakerStats'>
                 <div className = 'speaker-stats'>
                     <SpeakerStatsLabels />
