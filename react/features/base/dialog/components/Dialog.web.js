@@ -9,6 +9,18 @@ import { translate } from '../../i18n';
 import AbstractDialog from './AbstractDialog';
 
 /**
+ * The ID to be used for the cancel button if enabled.
+ * @type {string}
+ */
+const CANCEL_BUTTON_ID = 'modal-dialog-cancel-button';
+
+/**
+ * The ID to be used for the ok button if enabled.
+ * @type {string}
+ */
+const OK_BUTTON_ID = 'modal-dialog-ok-button';
+
+/**
  * Web dialog that uses atlaskit modal-dialog to display dialogs.
  */
 class Dialog extends AbstractDialog {
@@ -41,6 +53,114 @@ class Dialog extends AbstractDialog {
     }
 
     /**
+     * Initializes a new Dialog instance.
+     *
+     * @param {Object} props - The read-only properties with which the new
+     * instance is to be initialized.
+     */
+    constructor(props) {
+        super(props);
+
+        this._onKeyDown = this._onKeyDown.bind(this);
+        this._setDialogElement = this._setDialogElement.bind(this);
+    }
+
+    /**
+     * React Component method that executes once component is mounted.
+     *
+     * @inheritdoc
+     */
+    componentDidMount() {
+        this.updateButtonFocus();
+
+        // adds listener for enter key
+        document.addEventListener('keydown', this._onKeyDown);
+    }
+
+    /**
+     * Clears the listener.
+     *
+     * @inheritdoc
+     * @returns {void}
+     */
+    componentWillUnmount() {
+        document.removeEventListener('keydown', this._onKeyDown);
+    }
+
+    /**
+     * React Component method that executes once component is updated.
+     *
+     * @inheritdoc
+     * @returns {void}
+     */
+    componentDidUpdate(prevProps) {
+        // if there is an update in any of the buttons enable/disable props
+        // update the focus if needed
+        if (prevProps.okDisabled !== this.props.okDisabled
+            || prevProps.cancelDisabled !== this.props.cancelDisabled) {
+            this.updateButtonFocus();
+        }
+    }
+
+    /**
+     * Updates focused button, if we have a reference to the dialog element
+     * focus on available button if there is no focus already.
+     *
+     * @returns {void}
+     */
+    updateButtonFocus() {
+        if (this._dialogElement) {
+
+            // if we have a focused element inside the dialog, skip changing
+            // the focus
+            if (this._dialogElement.contains(document.activeElement)) {
+                return;
+            }
+
+            let buttonToFocus;
+
+            if (this.props.okDisabled) {
+                buttonToFocus = this._dialogElement
+                    .querySelector(`[id=${CANCEL_BUTTON_ID}]`);
+            } else {
+                buttonToFocus = this._dialogElement
+                    .querySelector(`[id=${OK_BUTTON_ID}]`);
+            }
+
+            if (buttonToFocus) {
+                buttonToFocus.focus();
+            }
+        }
+    }
+
+    /**
+     * Listening for Enter key to submit the dialog.
+     *
+     * @param {Object} e - the key event
+     * @returns {void}
+     * @private
+     */
+    _onKeyDown(e) {
+        const enterKeyCode = 13;
+
+        if (e.key === enterKeyCode) {
+            this._onSubmit();
+        }
+    }
+
+    /**
+     * Sets the instance variable for the component's dialog element so it
+     * can be accessed directly.
+     *
+     * @param {Object} element - The DOM element for the component's dialog.
+     * @private
+     * @returns {void}
+     */
+    _setDialogElement(element) {
+        this._dialogElement = element;
+    }
+
+    /**
      * Implements React's {@link Component#render()}.
      *
      * @inheritdoc
@@ -48,21 +168,23 @@ class Dialog extends AbstractDialog {
      */
     render() {
         return (
-            <ModalDialog
-                footer = { this._renderFooter() }
-                header = { this._renderHeader() }
-                isOpen = { true }
-                onDialogDismissed = { this._onCancel }
-                width = { this.props.width || 'medium' }>
-                <div>
-                    <form
-                        className = 'modal-dialog-form'
-                        id = 'modal-dialog-form'
-                        onSubmit = { this._onSubmit }>
-                        { this.props.children }
-                    </form>
-                </div>
-            </ModalDialog>);
+            <div ref = { this._setDialogElement }>
+                <ModalDialog
+                    footer = { this._renderFooter() }
+                    header = { this._renderHeader() }
+                    isOpen = { true }
+                    onDialogDismissed = { this._onCancel }
+                    width = { this.props.width || 'medium' }>
+                    <div>
+                        <form
+                            className = 'modal-dialog-form'
+                            id = 'modal-dialog-form'
+                            onSubmit = { this._onSubmit }>
+                            { this.props.children }
+                        </form>
+                    </div>
+                </ModalDialog>
+            </div>);
     }
 
     /**
@@ -79,7 +201,7 @@ class Dialog extends AbstractDialog {
         return (
             <AKButton
                 appearance = 'subtle'
-                id = 'modal-dialog-cancel-button'
+                id = { CANCEL_BUTTON_ID }
                 onClick = { this._onCancel }>
                 { this.props.t(this.props.cancelTitleKey || 'dialog.Cancel') }
             </AKButton>
@@ -136,7 +258,7 @@ class Dialog extends AbstractDialog {
             <AKButton
                 appearance = 'primary'
                 form = 'modal-dialog-form'
-                id = 'modal-dialog-ok-button'
+                id = { OK_BUTTON_ID }
                 isDisabled = { this.props.okDisabled }
                 onClick = { this._onSubmit }>
                 { this.props.t(this.props.okTitleKey || 'dialog.Ok') }
