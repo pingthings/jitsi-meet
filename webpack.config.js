@@ -193,6 +193,15 @@ const configs = [
         output: Object.assign({}, config.output, {
             library: 'JitsiMeetExternalAPI'
         })
+    }),
+
+    // The Webpack configuration to bundle popup_bundle.js (js file for the
+    // device selection popup dialog).
+    Object.assign({}, config, {
+        entry: {
+            'popup_bundle': './react/features/device-selection/popup.js'
+        },
+        output: config.output
     })
 ];
 
